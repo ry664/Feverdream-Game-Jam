@@ -40,8 +40,8 @@ public class PlayerCameraController : MonoBehaviour
 
         if (lookInput.sqrMagnitude > 0.0001f)
         {
-            yaw += lookInput.x * mouseSensitivity;
-            pitch -= lookInput.y * mouseSensitivity;
+            yaw += lookInput.x * mouseSensitivity / 100;
+            pitch -= lookInput.y * mouseSensitivity / 100;
             pitch = Mathf.Clamp(pitch, -verticalLimit, verticalLimit);
         }
 

@@ -1,8 +1,8 @@
 ﻿<Solution>
   <Project Path="SplineArchitect.csproj" />
   <Project Path="AYellowpaper.SerializedCollections.csproj" />
-  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="SplineArchitect.Editor.csproj" />
+  <Project Path="Assembly-CSharp.csproj" />
   <Project Path="AYellowpaper.SerializedCollections.Editor.csproj" />
   <Project Path="SplineArchitect.Examples.csproj" />
   <Project Path="Assembly-CSharp-firstpass.csproj" />

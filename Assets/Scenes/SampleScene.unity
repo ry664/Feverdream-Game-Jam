@@ -207,7 +207,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: -0.35354, y: 0.75251997, z: -0.35354}
+  m_LocalPosition: {x: 0, y: 0.74, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -270,7 +270,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCameraController
   playerBody: {fileID: 1793459527}
-  mouseSensitivity: 0.11
+  mouseSensitivity: 6
   verticalLimit: 89
   lockCursor: 1
   strafeTiltAngle: 2
@@ -578,6 +578,7 @@ GameObject:
   - component: {fileID: 1793459524}
   - component: {fileID: 1793459523}
   - component: {fileID: 1793459522}
+  - component: {fileID: 1793459528}
   m_Layer: 0
   m_Name: Capsule
   m_TagString: Untagged
@@ -600,13 +601,13 @@ MonoBehaviour:
   moveSpeed: 6
   moveAcceleration: 25
   moveDeceleration: 20
-  jumpHeight: 1.8
-  gravityStrength: 9.81
-  groundedRayDistance: 1
-  groundStickForce: 4
+  gravityStrength: -9.81
   gravityLayerMask:
     serializedVersion: 2
     m_Bits: 8
+  upDirection: {x: 0, y: 1, z: 0}
+  controller: {fileID: 1793459523}
+  foot: {fileID: 1963887842}
 --- !u!143 &1793459523
 CharacterController:
   m_ObjectHideFlags: 0
@@ -726,7 +727,105 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 330585546}
+  - {fileID: 1963887842}
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1793459528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1793459521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 39a8b4cb68e150648bffd845b63dbd2b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Jump
+  jumpHeight: 3
+  isJumping: 0
+  jumpApexTime: 0.4
+  jumpCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: -0.00854869
+      value: -0.0052396976
+      inSlope: 3.2651453
+      outSlope: 3.2651453
+      tangentMode: 34
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 0.13931102
+      value: 0.47754374
+      inSlope: 0.3054652
+      outSlope: 0.3054652
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.6022049
+    - serializedVersion: 3
+      time: 0.59824747
+      value: 0.090307504
+      inSlope: -0.8776802
+      outSlope: -0.8776802
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.38530624
+      outWeight: 0.52749634
+    - serializedVersion: 3
+      time: 1.0640419
+      value: -0.76257837
+      inSlope: -4.140138
+      outSlope: -4.140138
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.106429994
+      outWeight: 0.09424508
+    - serializedVersion: 3
+      time: 1.070109
+      value: -1.0506691
+      inSlope: -0.039759643
+      outSlope: -0.039759643
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 1
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!1 &1963887841
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1963887842}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1963887842
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1963887841}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: -1.04, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1793459527}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
