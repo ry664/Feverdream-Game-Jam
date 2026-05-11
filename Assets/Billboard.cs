@@ -1,76 +1,66 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Animator))]
-public class Billboard : MonoBehaviour
-{
-    [SerializeField] Transform target; // player or camera
-    [Tooltip("Include front, back, left, right, up, down sprite variant based on rotation")]
-    [SerializeField] bool cubeMapBillboard = false;
-    [SerializeField] bool lockY;
-    [Tooltip("A child object that will rotate to face the target while the base stays as the pivot.")]
-    [SerializeField] Transform rotatingChild;
-    [Tooltip("Optional animator int parameter used by the cube-map billboard to select the facing sprite.")]
-    [SerializeField] string directionParameter = "Direction";
+public class Billboard : MonoBehaviour {
+    [SerializeField] private BillboardType billboardType;
+    [SerializeField] private bool useCubeMap = false;
+    [SerializeField] private Transform rotatingChild;
 
-    Animator anim;
+    [Header("Lock Rotation")]
+    [SerializeField] private bool lockX;
+    [SerializeField] private bool lockY;
+    [SerializeField] private bool lockZ;
 
-    void Start()
-    {
+    [SerializeField] private string directionParameter = "Direction";
+
+    private Vector3 originalRotation;
+    private Animator anim;
+
+    public enum BillboardType { LookAtCamera, CameraForward };
+
+    private void Awake() {
+        originalRotation = transform.rotation.eulerAngles;
         anim = GetComponent<Animator>();
-        if (target == null)
-        {
-            if (Camera.main != null)
-            {
-                Debug.Log($"no camera assigned, using Main Camera {Camera.main.name}");
-                target = Camera.main.transform;
-            }
-        }
-
-        if (rotatingChild == null && transform.childCount > 0)
-        {
+        if (rotatingChild == null && transform.childCount > 0) {
             rotatingChild = transform.GetChild(0);
         }
     }
 
-    void Update()
-    {
+    // Use Late update so everything should have finished moving.
+    void LateUpdate() {
+        Transform targetTransform = useCubeMap && rotatingChild != null ? rotatingChild : transform;
 
-        if (!cubeMapBillboard)
-        {
-            Vector3 lookDirection = target.position - transform.position;
-            if (lockY)
-            {
-                lookDirection = Vector3.ProjectOnPlane(lookDirection, transform.up);
-            }
-
-            if (lookDirection.sqrMagnitude > 0.001f)
-            {
-                transform.rotation = Quaternion.LookRotation(lookDirection.normalized, transform.up);
-            }
+        // There are two ways people billboard things.
+        switch (billboardType) {
+            case BillboardType.LookAtCamera:
+                targetTransform.LookAt(Camera.main.transform.position, Vector3.up);
+                break;
+            case BillboardType.CameraForward:
+                targetTransform.forward = -Camera.main.transform.forward;
+                break;
+            default:
+                break;
         }
-        else
-        {
-            Vector3 lookDirection = target.position - rotatingChild.position;
-            if (lockY)
-            {
-                lookDirection = Vector3.ProjectOnPlane(lookDirection, transform.up);
-            }
 
-            if (lookDirection.sqrMagnitude > 0.001f)
-            {
-                rotatingChild.rotation = Quaternion.LookRotation(lookDirection.normalized, transform.up);
-            }
+        // Modify the rotation in Euler space to lock certain dimensions.
+        Vector3 rotation = targetTransform.rotation.eulerAngles;
+        if (lockX) { rotation.x = originalRotation.x; }
+        if (lockY) { rotation.y = originalRotation.y; }
+        if (lockZ) { rotation.z = originalRotation.z; }
+        targetTransform.rotation = Quaternion.Euler(rotation);
 
-            UpdateCubeMapAnimator(lookDirection.normalized);
+        // Update cube map animator if enabled
+        if (useCubeMap && anim != null) {
+            UpdateCubeMapAnimator();
         }
     }
 
-    void UpdateCubeMapAnimator(Vector3 worldDirection)
-    {
-        if (anim == null || string.IsNullOrEmpty(directionParameter))
+    private void UpdateCubeMapAnimator() {
+        if (string.IsNullOrEmpty(directionParameter))
             return;
 
-        Vector3 localDirection = transform.InverseTransformDirection(worldDirection).normalized;
+        Vector3 cameraForward = Camera.main.transform.forward;
+        Vector3 localDirection = transform.InverseTransformDirection(cameraForward).normalized;
 
         float forward = Vector3.Dot(localDirection, Vector3.forward);
         float right = Vector3.Dot(localDirection, Vector3.right);
@@ -88,19 +78,16 @@ public class Billboard : MonoBehaviour
         if (up > maxDot) { maxDot = up; directionIndex = 4; }
         if (down > maxDot) { maxDot = down; directionIndex = 5; }
 
-        if (HasAnimatorParameter(directionParameter))
-        {
+        if (HasAnimatorParameter(directionParameter)) {
             anim.SetInteger(directionParameter, directionIndex);
         }
     }
 
-    bool HasAnimatorParameter(string parameterName)
-    {
+    private bool HasAnimatorParameter(string parameterName) {
         if (anim == null)
             return false;
 
-        foreach (AnimatorControllerParameter parameter in anim.parameters)
-        {
+        foreach (AnimatorControllerParameter parameter in anim.parameters) {
             if (parameter.name == parameterName)
                 return true;
         }

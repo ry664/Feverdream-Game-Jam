@@ -6,8 +6,10 @@ public class PlayerController : MonoBehaviour
 {
     [Header("Movement")]
     public float moveSpeed = 6f;
-    public float moveAcceleration = 25f;
-    public float moveDeceleration = 20f;
+    public float accelTime;
+    public AnimationCurve accelerationCurve;
+    public float decelTime;
+    public AnimationCurve decelerationCurve;
     public float gravityStrength = -9.81f;
     public LayerMask gravityLayerMask = ~0;
 
@@ -18,6 +20,8 @@ public class PlayerController : MonoBehaviour
 
     float AcelerationTimer;
     float decelerationTimer;
+
+    Vector2 oldInput;
 
 
     bool hasJump;
@@ -35,10 +39,11 @@ public class PlayerController : MonoBehaviour
     }
 
     void Update()
-    {
+    {   
+        DontFallIfNoGround();
         MovePlayer();
         RotatePlayerWithGravity();
-        DontFallIfNoGround();
+        
     }
     void RotatePlayerWithGravity()
     {
@@ -70,9 +75,15 @@ public class PlayerController : MonoBehaviour
     }
     void DontFallIfNoGround()
     {
-        if(!Physics.Raycast(foot.position, upDirection, 100))
+        if(!Physics.Raycast(foot.position, -upDirection, 100))
         {
+            Debug.Log("no");
+            Debug.DrawRay(foot.position,-upDirection * 100,Color.red,1);
             upDirection = Vector3.zero;
+            gravityStrength = 0;
+        }
+        else{
+            gravityStrength = -9.81f;
         }
     }
 
@@ -92,7 +103,44 @@ public class PlayerController : MonoBehaviour
 
         Vector2 input = InputSystem.actions["Move"].ReadValue<Vector2>().normalized;
 
-        Vector3 moveInput = new(input.x * targetSpeed, yInput, input.y * targetSpeed);
+        if(input.sqrMagnitude > 0.1f)
+        {
+            decelerationTimer = 0;
+            AcelerationTimer += Time.deltaTime;
+        }
+        else
+        {
+            AcelerationTimer = 0;
+            decelerationTimer += Time.deltaTime;
+        }
+        
+
+        // Calculate acceleration/deceleration multiplier using curves
+        float speedMultiplier;
+        if(input.sqrMagnitude > 0.1f)
+        {
+            // Accelerating
+            float accelProgress = Mathf.Clamp01(AcelerationTimer / accelTime);
+            speedMultiplier = accelerationCurve.Evaluate(accelProgress);
+        }
+        else
+        {
+            // Decelerating
+            float decelProgress = Mathf.Clamp01(decelerationTimer / decelTime);
+            speedMultiplier = decelerationCurve.Evaluate(decelProgress);
+        }
+        Vector3 moveInput = Vector3.zero;
+        if(AcelerationTimer > 0f){
+            oldInput = input;
+            moveInput = new(input.x * targetSpeed * speedMultiplier, yInput, input.y * targetSpeed * speedMultiplier);
+        }
+        else if (decelerationTimer < decelTime){
+            moveInput = new(oldInput.x * targetSpeed * speedMultiplier, yInput, oldInput.y * targetSpeed * speedMultiplier);
+        }
+        else{moveInput = new(0,yInput,0);}
+
+
+        
         controller.Move(transform.TransformDirection(moveInput) * Time.deltaTime);  // should be local space movement and falling
     }
 
