@@ -5,6 +5,7 @@ public class DamageSource : MonoBehaviour
 {
     [SerializeField] DamageType damageType;
     [SerializeField] bool continous;
+    [SerializeField] int damage;
 
     public UnityEvent OnTakeDamage;
 
@@ -16,28 +17,34 @@ public class DamageSource : MonoBehaviour
         {
             case DamageType.Contact:
             trigger = GetComponent<ContactEvent>();
-            trigger.OnEnterTrigger.AddListener(DoContactDamage);
             break;
+
             case DamageType.TriggerBox:
             trigger = GetComponent<ZoneEvent>();
             break;
-        }  
-    }
-    void Update()
-    {
-        if(!continous) return;
-
-        switch (damageType)
+        } 
+        if (!continous)
         {
-            case DamageType.Contact:
-            break;
-            case DamageType.TriggerBox:
-            break;
+            trigger.OnEnterTrigger.AddListener(DoDamage);
+        }
+    }
+    void FixedUpdate()
+    {
+        if (trigger.InTrigger && continous)
+        {
+            DoDamage();
         }
     }
 
-    void DoContactDamage(){}
-    void DoTriggerDamage(){}
+    void DoDamage()
+    {
+        if(continous)
+        if(trigger.EffectedObject.TryGetComponent(out Health health))
+        {
+            health.TakeDamage(damage);
+        }
+    }
+
 
     void OnValidate()
     {

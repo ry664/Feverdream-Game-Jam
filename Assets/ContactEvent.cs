@@ -6,6 +6,7 @@ public class ContactEvent : TriggerEvent
     {
         if (filterByLayer && other.gameObject.layer != targetLayer) return;
         if (filterByTag   && !other.transform.CompareTag(targetTag)) return;
+        EffectedObject = other.transform;
         OnEnterTrigger?.Invoke();
         
     }
@@ -13,6 +14,7 @@ public class ContactEvent : TriggerEvent
     {
         if (other.gameObject.layer != targetLayer) return;
         if (!other.transform.CompareTag(targetTag)) return;
+        EffectedObject = null;
         OnExitTrigger?.Invoke();
     }
 }
