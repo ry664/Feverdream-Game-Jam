@@ -1,48 +1,39 @@
 using Unity.VisualScripting;
 using UnityEngine;
-
-public class NPCMovment : MonoBehaviour
-{
-    
-}
-[RequireComponent(typeof(Health))]
-public class Enemy : MonoBehaviour
-{
-    
-}
-public class Health : MonoBehaviour
-{
-    public float maxHealth;
-    public float currentHealth;
-    public float selfHealSpeed;
-    public void TakeDamage(int ammount)
-    {
-        
-    }
-    public void Heal(int ammount)
-    {
-        
-    }
-}
+using UnityEngine.Events;
 public class DamageSource : MonoBehaviour
 {
     [SerializeField] DamageType damageType;
     [SerializeField] bool continous;
+
+    public UnityEvent OnTakeDamage;
+
+    TriggerEvent trigger;
 
     void Start()
     {
         switch (damageType)
         {
             case DamageType.Contact:
-            GetComponent<ContactEvent>();
+            trigger = GetComponent<ContactEvent>();
+            trigger.OnEnterTrigger.AddListener(DoContactDamage);
             break;
             case DamageType.TriggerBox:
-            GetComponent<ZoneEvent>();
+            trigger = GetComponent<ZoneEvent>();
             break;
         }  
     }
     void Update()
     {
+        if(!continous) return;
+
+        switch (damageType)
+        {
+            case DamageType.Contact:
+            break;
+            case DamageType.TriggerBox:
+            break;
+        }
     }
 
     void DoContactDamage(){}
