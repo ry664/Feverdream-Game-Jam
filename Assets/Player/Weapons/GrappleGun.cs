@@ -4,11 +4,12 @@ using UnityEngine;
 [RequireComponent(typeof(Gun))]
 public class GrappleGun : MonoBehaviour
 {
+    Gun connectedGun;
     [SerializeField] Transform raycastOrign;
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        
+        connectedGun = GetComponent<Gun>();   
     }
 
     // Update is called once per frame
@@ -29,7 +30,10 @@ public class GrappleGun : MonoBehaviour
 
     void HitGrappleable(Vector3 hitPoint)
     {
-        PlayGrappleAnim(false);
+        if (connectedGun.UsingAnimator)
+        {
+            PlayGrappleAnim(false);
+        }
 
         Rigidbody rb = GetComponentInParent<Rigidbody>();
         if (rb == null)
@@ -51,14 +55,15 @@ public class GrappleGun : MonoBehaviour
 
     void HitGrabable(Transform hitEntity)
     {
-        PlayGrappleAnim(true);
+        if(connectedGun.UsingAnimator){
+            PlayGrappleAnim(true);
+        }
         StartCoroutine(PullTowards(hitEntity)); 
     }
 
     void PlayGrappleAnim(bool grabOrGrapple)
     {
         string animClip = grabOrGrapple ? "Grab" : "Grapple";
-        // animator.play(animclip)
     }
 
     IEnumerator PullTowards(Transform hitEntity)

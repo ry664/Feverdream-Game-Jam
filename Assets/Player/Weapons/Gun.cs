@@ -3,36 +3,57 @@ using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.InputSystem;
 
-public class Gun : MonoBehaviour
+public class Gun : MonoBehaviour, IWeapon
 {
     public UnityEvent fire = new();
     public UnityEvent reload = new();
 
     public int MaxAmmo = 100;
     public int currentAmmo;
-    public bool isAutomatic;
-    public int magizineSize;
+    [SerializeField] bool isAutomatic;
+    [SerializeField] int magizineSize;
+    [SerializeField] float reloadTime;
     int currentLoadedAmmo;
     
-    float fireCooldown;
+    [SerializeField] float fireCooldown;
     float currentCooldown;
     bool reloading;
+    bool UsingGlobalAmmo => globalAmmo != null;
+    GlobalAmmo globalAmmo;
+
+    public bool UsingAnimator => gunAnimator != null;
+    Animator gunAnimator;
+    public string reloadAnimation;
+    public string fireAnimation;
 
     void Start()
     {
+        TryGetComponent(out gunAnimator);
+        TryGetComponent(out globalAmmo);
         currentCooldown = fireCooldown;
+    }
+    void Update()
+    {
+        Fire();
+        Reload();
     }
 
     public virtual void Fire(){
 
         currentCooldown -= Time.deltaTime;
-        if(currentCooldown > fireCooldown || reloading) return;
+        if(currentCooldown > 0 || reloading || currentLoadedAmmo < 1) return;
 
         if (isAutomatic)
         {
             if (InputSystem.actions["Fire"].IsPressed())
             {
                 fire?.Invoke();
+                if (UsingAnimator)
+                {
+                    gunAnimator.Play("Fire");
+                }
+                currentCooldown = fireCooldown;
+                currentLoadedAmmo--;
             }
         }
         else
@@ -40,6 +61,12 @@ public class Gun : MonoBehaviour
             if (InputSystem.actions["Fire"].WasPressedThisFrame())
             {
                 fire?.Invoke();
+                if (UsingAnimator)
+                {
+                    gunAnimator.Play("Fire");
+                }
+                currentCooldown = fireCooldown;
+                currentLoadedAmmo--;
             }
         }
         
@@ -52,6 +79,14 @@ public class Gun : MonoBehaviour
         if (InputSystem.actions["Reload"].WasPressedThisFrame())
         {
             reloading = true;
+            if (UsingAnimator)
+            {
+                gunAnimator.Play("Reload");
+            }
+            else
+            {
+                Invoke(nameof(EndReload), reloadTime);
+            }
             reload?.Invoke();
             RemoveAmmo(magizineSize);
             currentLoadedAmmo = magizineSize;
@@ -64,10 +99,42 @@ public class Gun : MonoBehaviour
 
     public void AddAmmo(int ammount)
     {
-        currentAmmo += Mathf.Clamp(currentAmmo + ammount, 0, MaxAmmo);
+        if (UsingGlobalAmmo)
+        {
+            globalAmmo.AddAmmo(ammount);
+        }
+        else 
+        {
+            currentAmmo += Mathf.Clamp(currentAmmo + ammount, 0, MaxAmmo);
+        }
     }
     public void RemoveAmmo(int ammount)
     {
-        currentAmmo -= Mathf.Clamp(currentAmmo - ammount, 0, MaxAmmo);
+        if (UsingGlobalAmmo)
+        {
+            globalAmmo.RemoveAmmo(ammount);
+        }
+        else 
+        {
+            currentAmmo -= Mathf.Clamp(currentAmmo - ammount, 0, MaxAmmo);
+        }
+    }
+
+    public void Onequip()
+    {
+        if (UsingAnimator)
+        {
+            gunAnimator.Play("Equip");
+        }
+        gameObject.SetActive(true);
+    }
+
+    public void OnUnequip()
+    {
+        if (UsingAnimator)
+        {
+           gunAnimator.Play("Unequip"); 
+        }
+        gameObject.SetActive(false);
     }
 }
