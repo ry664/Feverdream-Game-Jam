@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - GravitySource
+  - Grabable
+  - Grappleable
   layers:
   - Default
   - TransparentFX
@@ -12,7 +14,7 @@ TagManager:
   - GravitySource
   - Water
   - UI
-  - 
+  - GrappleInteractable
   - 
   - 
   - 

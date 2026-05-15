@@ -1,7 +1,12 @@
 using UnityEngine;
-using UnityEngine.Events;
+[RequireComponent(typeof(Collider))]
 public class ZoneEvent : TriggerEvent
 {
+
+    void Start()
+    {
+        GetComponent<Collider>().isTrigger = true;
+    }
 
     void OnTriggerEnter(Collider other)
     {

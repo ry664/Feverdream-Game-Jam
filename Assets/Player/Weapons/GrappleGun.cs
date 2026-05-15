@@ -1,77 +1,82 @@
+using System;
 using System.Collections;
+using UnityEditor.Search;
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(Gun))]
 public class GrappleGun : MonoBehaviour
 {
     Gun connectedGun;
-    [SerializeField] Transform raycastOrign;
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    CharacterController controller;
+    Rigidbody rb;
+    [SerializeField] Transform raycastSource;
+
+    [SerializeField] float grabTime;
+    float grabtimer;
+    [SerializeField] float Targetdistance;
+    [SerializeField] Velocity grabSpeed;
+
+    bool isGrappling = false;
+    [SerializeField] float grappleGoalOffset; 
+    [SerializeField] Velocity grappleSpeed;
     void Start()
     {
-        connectedGun = GetComponent<Gun>();   
+        connectedGun = GetComponent<Gun>();
+        Transform parent = transform.parent;
+
+        rb = parent.GetComponentInParent<Rigidbody>();
+        controller = parent.GetComponentInParent<CharacterController>();
+        connectedGun.fire.AddListener(CheckHits);
     }
 
-    // Update is called once per frame
-    void Update()
+    IEnumerator Grapple(RaycastHit hit)
     {
+        Debug.Log("a");
+        isGrappling = true;
+        controller.enabled = false;
+        rb.isKinematic = false;
+        while(Vector3.Distance(hit.point, raycastSource.position) > grappleGoalOffset || grabtimer < grabTime)
+        {
+            grabtimer += Time.fixedDeltaTime;
+            rb.maxLinearVelocity = grappleSpeed.max;
+            Vector3 direction = (hit.point - raycastSource.transform.position).normalized;
+            rb.AddForce(direction, ForceMode.Impulse);
+            yield return new WaitForFixedUpdate();
+        }
+        grabtimer = 0;
+        rb.isKinematic = true;
+        rb.maxLinearVelocity = Mathf.Infinity;
+        controller.enabled = true;
+        
+        isGrappling = false;
+
         
     }
-    void CastAndCheckHits()
-    {
-        if (Physics.Raycast(raycastOrign.position, raycastOrign.forward, out RaycastHit hit, 1000, LayerMask.NameToLayer("GrappleInteractable")))
-        {
-            string tag = hit.collider.tag;
+    IEnumerator Grab(RaycastHit hit){
+        yield return null;
+    }
 
-            if(tag == "Grappleable")    { HitGrappleable(hit.point); }
-            else if (tag == "Grabable") { HitGrabable(hit.collider.transform); }
+    void CheckHits(){
+        Debug.Log("aa");
+        if(isGrappling) return;
+        if(Physics.Raycast(raycastSource.position, raycastSource.forward,out RaycastHit hit, 1000)){
+            Debug.Log(hit.collider);
+            if(hit.collider.CompareTag("Grabable")){
+                
+                StartCoroutine(Grab(hit));
+            }
+            else if(hit.collider.CompareTag("Grappleable")){
+                StartCoroutine(Grapple(hit));
+            }
         }
     }
 
-    void HitGrappleable(Vector3 hitPoint)
-    {
-        if (connectedGun.UsingAnimator)
-        {
-            PlayGrappleAnim(false);
-        }
 
-        Rigidbody rb = GetComponentInParent<Rigidbody>();
-        if (rb == null)
-        {
-            return;
-        }
-
-        Vector3 direction = hitPoint - rb.position;
-        if (direction.sqrMagnitude < 0.01f)
-        {
-            return;
-        }
-
-        float grappleSpeed = Mathf.Clamp(direction.magnitude * 3f, 20f, 60f);
-        Vector3 grappleVelocity = direction.normalized * grappleSpeed;
-
-        rb.linearVelocity += grappleVelocity / 10f;
-    }
-
-    void HitGrabable(Transform hitEntity)
-    {
-        if(connectedGun.UsingAnimator){
-            PlayGrappleAnim(true);
-        }
-        StartCoroutine(PullTowards(hitEntity)); 
-    }
-
-    void PlayGrappleAnim(bool grabOrGrapple)
-    {
-        string animClip = grabOrGrapple ? "Grab" : "Grapple";
-    }
-
-    IEnumerator PullTowards(Transform hitEntity)
-    {
-        for (int i = 0; i < 5; i++)
-        {
-            Vector3.Lerp(hitEntity.position, raycastOrign.position, i/6);  // weird probably
-            yield return new WaitForFixedUpdate(); 
-        }  
-    }
+}
+[Serializable]
+public struct Velocity{
+    public float acceleration;
+    public float min;
+    public float max;
 }
